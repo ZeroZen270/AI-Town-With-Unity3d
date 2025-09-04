@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  ai-town:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - CONVEX_DEPLOYMENT=local
+      - CONVEX_URL=http://convex-local:8080
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - CHROMA_URL=http://chroma:8000
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - convex-local
+      - ollama
+      - chroma
+    command: npm run dev:local
+
+  convex-local:
+    image: convex/convex-local:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./convex:/convex
+      - convex-data:/data
+    environment:
+      - CONVEX_SITE_URL=http://localhost:3000
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    restart: unless-stopped
+
+  chroma:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma-data:/chroma/chroma
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+    restart: unless-stopped
+
+volumes:
+  convex-data:
+  ollama-data:
+  chroma-data:
